@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, session, url_for, jsonify
+from flask import Flask, render_template, redirect, request, session, url_for, jsonify, send_file
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import pandas as pd
 import pickle
@@ -117,6 +117,14 @@ def history_data():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+@app.route('/download')
+@login_required
+def download_csv():
+    try:
+        return send_file('data/usage_data.csv', as_attachment=True)
+    except Exception as e:
+        return f"Error downloading file: {e}"
+
 # --- Energy Usage Simulation ---
 def get_live_data():
     usage = round(random.uniform(0.5, 3.0), 2)
@@ -155,4 +163,3 @@ def init_db():
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
-

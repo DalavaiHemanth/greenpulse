@@ -15,6 +15,19 @@
         }
         .ok { background-color: #28a745; } /* Green */
         .warn { background-color: #dc3545; } /* Red */
+        .download-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        .download-btn:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -23,6 +36,12 @@
     <div id="alertBox" class="banner">Loading tip...</div>
 
     <canvas id="usageChart" width="400" height="150"></canvas>
+
+    <!-- ✅ Download CSV Button -->
+    <br><br>
+    <a href="{{ url_for('download_csv') }}" download>
+        <button class="download-btn">⬇ Download Usage Data (CSV)</button>
+    </a>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
