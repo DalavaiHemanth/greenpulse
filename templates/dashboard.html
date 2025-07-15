@@ -5,44 +5,84 @@
     <title>GreenPulse Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial; margin: 2rem; }
-        .banner {
-            padding: 1rem;
-            border-radius: 8px;
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 2rem;
+            background-color: #f2f7f4;
+        }
+        h1 {
+            color: #2e7d32;
+        }
+        .tip-box {
             margin-bottom: 1rem;
-            font-weight: bold;
-            color: white;
+            padding: 1rem;
+            border-left: 5px solid #2e7d32;
+            background-color: #e8f5e9;
+            border-radius: 5px;
         }
-        .ok { background-color: #28a745; } /* Green */
-        .warn { background-color: #dc3545; } /* Red */
-        .download-btn {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            margin-top: 20px;
-            cursor: pointer;
+        .chart-container {
+            margin-top: 2rem;
         }
-        .download-btn:hover {
-            background-color: #0056b3;
+        canvas {
+            margin-bottom: 2rem;
         }
     </style>
 </head>
 <body>
     <h1>🌿 GreenPulse Dashboard</h1>
 
-    <div id="alertBox" class="banner">Loading tip...</div>
+    <div id="tips"></div>
 
-    <canvas id="usageChart" width="400" height="150"></canvas>
+    <div class="chart-container" id="charts"></div>
 
-    <!-- ✅ Download CSV Button -->
-    <br><br>
-    <a href="{{ url_for('download_csv') }}" download>
-        <button class="download-btn">⬇ Download Usage Data (CSV)</button>
-    </a>
+    <script>
+        async function loadEnergyData() {
+            const res = await fetch('/api/energy');
+            const data = await res.json();
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+            const tipsContainer = document.getElementById('tips');
+            tipsContainer.innerHTML = '';
+            data.tips.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'tip-box';
+                div.innerHTML = `<b>${t.device}:</b> ${t.tip}`;
+                tipsContainer.appendChild(div);
+            });
+        }
+
+        async function loadChartData() {
+            const res = await fetch('/api/history');
+            const history = await res.json();
+            const chartsContainer = document.getElementById('charts');
+            chartsContainer.innerHTML = '';
+
+            Object.keys(history).forEach(device => {
+                const canvas = document.createElement('canvas');
+                chartsContainer.appendChild(canvas);
+                new Chart(canvas.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: history[device].map((_, i) => i + 1),
+                        datasets: [{
+                            label: device,
+                            data: history[device],
+                            fill: false,
+                            borderColor: '#2e7d32',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true }
+                        }
+                    }
+                });
+            });
+        }
+
+        loadEnergyData();
+        loadChartData();
+    </script>
 </body>
 </html>
