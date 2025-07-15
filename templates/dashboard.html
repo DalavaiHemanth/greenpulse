@@ -1,81 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>GreenPulse Dashboard</title>
-    <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial; margin: 2rem; }
+        .banner {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            color: white;
+        }
+        .ok { background-color: #28a745; } /* Green */
+        .warn { background-color: #dc3545; } /* Red */
+    </style>
 </head>
 <body>
-    <div class="dashboard">
-        <h1>Smart Power Usage Dashboard</h1>
+    <h1>🌿 GreenPulse Dashboard</h1>
 
-        <div class="card" id="usageData">
-            <h2>Device: <span id="deviceName">-</span></h2>
-            <p>Current Usage: <span id="currentUsage">-</span> kWh</p>
-            <p>Status: <span id="status">Loading...</span></p>
-            <p class="tip" id="tipText">-</p>
-        </div>
+    <div id="alertBox" class="banner">Loading tip...</div>
 
-        <!-- Line Chart -->
-        <canvas id="usageChart" width="400" height="200"></canvas>
+    <canvas id="usageChart" width="400" height="150"></canvas>
 
-        <button onclick="fetchData(); fetchChartData();">Refresh Now</button>
-    </div>
-
-    <script>
-        let chart;
-
-        function fetchData() {
-            fetch('/api/energy')
-                .then(res => res.json())
-                .then(json => {
-                    document.getElementById('deviceName').innerText = json.data.device;
-                    document.getElementById('currentUsage').innerText = json.data.usage;
-                    document.getElementById('status').innerText = json.overuse ? "⚠️ Overuse Detected!" : "✅ Normal";
-                    document.getElementById('tipText').innerText = json.tip;
-                });
-        }
-
-        function fetchChartData() {
-            fetch('/api/history')
-                .then(res => res.json())
-                .then(data => {
-                    const ctx = document.getElementById('usageChart').getContext('2d');
-                    if (chart) chart.destroy(); // destroy old chart before drawing new one
-                    chart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.labels,
-                            datasets: [{
-                                label: 'Energy Usage (kWh)',
-                                data: data.values,
-                                borderColor: 'green',
-                                backgroundColor: 'lightgreen',
-                                fill: true,
-                                tension: 0.3
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                y: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }
-                    });
-                });
-        }
-
-        // Auto-refresh every 10 seconds
-        window.onload = () => {
-            fetchData();
-            fetchChartData();
-            setInterval(() => {
-                fetchData();
-                fetchChartData();
-            }, 10000);
-        };
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
