@@ -95,25 +95,31 @@ def dashboard():
 @app.route('/api/energy')
 @login_required
 def energy_api():
-    data = get_live_data()
-    prediction = model.predict([[data['usage']]])[0]
-    overuse = bool(prediction)
-    tip = get_tip(overuse)
+    records = get_live_data()
+    overuse_devices = []
+    tips = []
+
+    for record in records:
+        prediction = model.predict([[record['usage']]])[0]
+        overuse = bool(prediction)
+        tip = get_tip(overuse)
+        if overuse:
+            overuse_devices.append(record['device'])
+        tips.append({'device': record['device'], 'tip': tip})
+
     return jsonify({
-        'data': data,
-        'overuse': overuse,
-        'tip': tip
+        'data': records,
+        'overuse_devices': overuse_devices,
+        'tips': tips
     })
 
 @app.route('/api/history')
 @login_required
 def history_data():
     try:
-        df = pd.read_csv('data/usage_data.csv').tail(20)
-        return jsonify({
-            'labels': list(range(len(df))),
-            'values': df['usage'].tolist()
-        })
+        df = pd.read_csv('data/usage_data.csv').tail(50)
+        grouped = df.groupby('device')['usage'].apply(list).to_dict()
+        return jsonify(grouped)
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -127,17 +133,23 @@ def download_csv():
 
 # --- Energy Usage Simulation ---
 def get_live_data():
-    usage = round(random.uniform(0.5, 3.0), 2)
-    device = 'Air Conditioner'
-    record = {'device': device, 'usage': usage}
+    devices = ['Air Conditioner', 'Refrigerator', 'Washing Machine', 'Fan', 'TV']
+    data = []
+
+    for device in devices:
+        usage = round(random.uniform(0.2, 3.5), 2)
+        data.append({'device': device, 'usage': usage})
+
     os.makedirs('data', exist_ok=True)
     csv_file = 'data/usage_data.csv'
-    df = pd.DataFrame([record])
+    df = pd.DataFrame(data)
+
     if os.path.exists(csv_file):
         df.to_csv(csv_file, mode='a', header=False, index=False)
     else:
         df.to_csv(csv_file, index=False)
-    return record
+
+    return data
 
 def get_tip(overuse):
     return "Try setting your AC to 24°C for efficiency." if overuse else "Your power usage is optimal!"
