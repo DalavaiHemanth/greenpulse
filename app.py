@@ -5,6 +5,7 @@ import pickle
 import random
 import sqlite3
 import os
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -123,6 +124,25 @@ def history_data():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+@app.route('/api/summary')
+@login_required
+def summary_api():
+    try:
+        df = pd.read_csv('data/usage_data.csv')
+        if 'timestamp' not in df.columns:
+            df['timestamp'] = pd.Timestamp.now()
+
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
+        df['date'] = df['timestamp'].dt.date
+
+        summary = df.groupby('date')['usage'].mean().reset_index()
+        return jsonify({
+            'labels': summary['date'].astype(str).tolist(),
+            'values': summary['usage'].round(2).tolist()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 @app.route('/download')
 @login_required
 def download_csv():
@@ -138,7 +158,11 @@ def get_live_data():
 
     for device in devices:
         usage = round(random.uniform(0.2, 3.5), 2)
-        data.append({'device': device, 'usage': usage})
+        data.append({
+            'device': device,
+            'usage': usage,
+            'timestamp': pd.Timestamp.now()
+        })
 
     os.makedirs('data', exist_ok=True)
     csv_file = 'data/usage_data.csv'
