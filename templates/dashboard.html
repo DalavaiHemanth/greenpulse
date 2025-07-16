@@ -7,33 +7,105 @@
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            margin: 2rem;
-            background-color: #f2f7f4;
+            margin: 1rem;
+            background-color: var(--bg);
+            color: var(--text);
+            transition: all 0.3s ease-in-out;
         }
+
+        :root {
+            --bg: #f2f7f4;
+            --text: #000;
+            --box: #e8f5e9;
+            --border: #2e7d32;
+        }
+
+        .dark-mode {
+            --bg: #121212;
+            --text: #f1f1f1;
+            --box: #263238;
+            --border: #81c784;
+        }
+
         h1 {
-            color: #2e7d32;
+            color: var(--border);
         }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
         .tip-box {
             margin-bottom: 1rem;
             padding: 1rem;
-            border-left: 5px solid #2e7d32;
-            background-color: #e8f5e9;
+            border-left: 5px solid var(--border);
+            background-color: var(--box);
             border-radius: 5px;
         }
-        .chart-container {
+
+        .section-title {
+            font-size: 1.2rem;
             margin-top: 2rem;
+            color: var(--border);
         }
+
+        .chart-container {
+            margin-top: 1rem;
+        }
+
         canvas {
             margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background-color: var(--border);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+
+        .btn:hover {
+            background-color: #1b5e20;
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn {
+                margin-top: 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>🌿 GreenPulse Dashboard</h1>
+    <div class="top-bar">
+        <h1>🌿 GreenPulse Dashboard</h1>
+        <div>
+            <button class="btn" onclick="toggleDarkMode()">🌓 Toggle Mode</button>
+            <button class="btn" onclick="window.location.href='/download'">⬇️ Download CSV</button>
+            <button class="btn" onclick="window.location.href='/logout'">🚪 Logout</button>
+        </div>
+    </div>
 
     <div id="tips"></div>
 
+    <div class="section-title">📊 Device Usage Charts</div>
     <div class="chart-container" id="charts"></div>
+
+    <div class="section-title">📅 Daily Average Usage Summary</div>
+    <div class="chart-container">
+        <canvas id="summaryChart"></canvas>
+    </div>
 
     <script>
         async function loadEnergyData() {
@@ -81,8 +153,39 @@
             });
         }
 
+        async function loadSummaryChart() {
+            const res = await fetch('/api/summary');
+            const summary = await res.json();
+
+            new Chart(document.getElementById('summaryChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: summary.labels,
+                    datasets: [{
+                        label: 'Average Daily Usage',
+                        data: summary.values,
+                        fill: false,
+                        borderColor: '#00796b',
+                        backgroundColor: '#b2dfdb',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    }
+                }
+            });
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
         loadEnergyData();
         loadChartData();
+        loadSummaryChart();
     </script>
 </body>
 </html>
