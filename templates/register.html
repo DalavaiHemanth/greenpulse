@@ -5,15 +5,19 @@
 </head>
 <body>
     <h2>Register</h2>
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p style="color:red">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <form method="POST">
         <input type="text" name="username" placeholder="Username" required><br>
-        <input type="email" name="email" placeholder="Enter Gmail" required><br>
+        <input type="email" name="email" placeholder="Gmail ID" required><br>
         <input type="password" name="password" placeholder="Password" required><br>
         <button type="submit">Register</button>
     </form>
-    <p>Already registered? <a href="/login">Login</a></p>
+    <p>Already have an account? <a href="/login">Login here</a>.</p>
 </body>
 </html>
